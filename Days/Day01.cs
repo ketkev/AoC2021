@@ -8,43 +8,58 @@ namespace AoC2021.Days
 {
     public sealed class Day01 : BaseDay
     {
-        private readonly string _input;
-
-        private readonly List<int> _moduleMass;
+        private readonly List<long> _heights;
 
         public Day01()
         {
-            _input = File.ReadAllText(InputFilePath);
-            _moduleMass = _input.Split('\n').Select(int.Parse).ToList();
-        }
-
-        private static int CalculateRequiredModuleFuel(int mass)
-        {
-            return mass / 3 - 2;
+            var input = File.ReadAllText(InputFilePath);
+            _heights = input.Split('\n').Select(long.Parse).ToList();
         }
 
         public override ValueTask<string> Solve_1()
         {
-            var fuelRequirement = _moduleMass.Select(CalculateRequiredModuleFuel).Sum();
-            return new ValueTask<string>($"{fuelRequirement}");
+            var count = 0L;
+            var previous = _heights.First();
+
+            foreach (var height in _heights)
+            {
+                if (height > previous)
+                    count++;
+
+                previous = height;
+            }
+
+            return new ValueTask<string>($"{count}");
+        }
+
+        private static long Calculate3SlidingWindow(IReadOnlyList<long> heights, int index)
+        {
+            var window = 0L;
+
+            for (var i = index; i < index + 3 && i < heights.Count && i > 0; i++)
+            {
+                window += heights[i];
+            }
+
+            return window;
         }
 
         public override ValueTask<string> Solve_2()
         {
-            var initialFuelRequirements = _moduleMass.Select(CalculateRequiredModuleFuel);
-            var totalFuelRequirement = 0;
+            var count = 0L;
 
-            foreach (var fuelRequirement in initialFuelRequirements)
+            for (var i = 0; i < _heights.Count; i++)
             {
-                var fuelRequirementForFuel = fuelRequirement;
-                while (fuelRequirementForFuel > 0)
+                var window = Calculate3SlidingWindow(_heights, i);
+                var previousWindow = Calculate3SlidingWindow(_heights, i - 1);
+
+                if (window > previousWindow)
                 {
-                    totalFuelRequirement += fuelRequirementForFuel;
-                    fuelRequirementForFuel = CalculateRequiredModuleFuel(fuelRequirementForFuel);
+                    count++;
                 }
             }
 
-            return new ValueTask<string>($"{totalFuelRequirement}");
+            return new ValueTask<string>($"{count}");
         }
     }
 }
