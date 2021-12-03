@@ -8,183 +8,135 @@ using AoCHelper;
 
 namespace AoC2021.Days
 {
+    public class Counts
+    {
+        public int ZeroCount;
+        public int OneCount;
+
+        public Counts(int zeroCount, int oneCount)
+        {
+            ZeroCount = zeroCount;
+            OneCount = oneCount;
+        }
+    }
+
     public sealed class Day03 : BaseDay
     {
-        private string _epsilon = "";
-        private string _gamma = "";
-
         private readonly List<string> _input;
+        private List<Counts> _counts;
 
         public Day03()
         {
             _input = File.ReadAllLines(InputFilePath).ToList();
+
+            _counts = new List<Counts>();
+
+            var inputWordLength = _input.First().Length;
+            for (var i = 0; i < inputWordLength; i++)
+            {
+                _counts.Add(new Counts(0, 0));
+            }
+
+            count_ones_and_zeros(_input);
         }
+
+        private void count_ones_and_zeros(IEnumerable<string> list)
+        {
+            foreach (var counts in _counts)
+            {
+                counts.OneCount = 0;
+                counts.ZeroCount = 0;
+            }
+
+            foreach (var row in list)
+            {
+                for (var i = 0; i < row.Length; i++)
+                {
+                    if (row[i] == '0')
+                    {
+                        _counts[i].ZeroCount++;
+                    }
+                    else
+                    {
+                        _counts[i].OneCount++;
+                    }
+                }
+            }
+        }
+
 
         public override ValueTask<string> Solve_1()
         {
-            for (var i = 0; i < _input.First().Length; i++)
+            var gamma = 0;
+            var epsilon = 0;
+
+            for (var i = 0; i < _counts.Count; i++)
             {
-                var one_count = 0;
-                var zero_count = 0;
-
-                foreach (var row in _input)
+                if (_counts[i].ZeroCount < _counts[i].OneCount)
                 {
-                    if (row[i] == '1')
-                    {
-                        one_count++;
-                    }
-                    else
-                    {
-                        zero_count++;
-                    }
+                    gamma += (int)Math.Pow(2, _counts.Count - 1 - i);
                 }
-
-                if (one_count > zero_count)
+                else if (_counts[i].ZeroCount > _counts[i].OneCount)
                 {
-                    _gamma += "1";
-                    _epsilon += "0";
-                }
-                else
-                {
-                    _gamma += "0";
-                    _epsilon += "1";
+                    epsilon += (int)Math.Pow(2, _counts.Count - 1 - i);
                 }
             }
 
-            var gamma_int = Convert.ToInt32(_gamma, 2);
-            var epsilon_int = Convert.ToInt32(_epsilon, 2);
-
-            var result = gamma_int * epsilon_int;
-
-            return new ValueTask<string>(result.ToString());
+            return new ValueTask<string>((gamma * epsilon).ToString());
         }
 
-        private (int one_count, int zero_count) CountCommonBits(List<string> input, List<bool> validRows, int column)
+        private LinkedList<string> ConvertToLinkedList(List<string> list)
         {
-            var oneCount = 0;
-            var zeroCount = 0;
+            var linkedList = new LinkedList<string>();
 
-            foreach (var row in _input)
+            foreach (var item in list)
             {
-                if (validRows[input.IndexOf(row)])
+                linkedList.AddLast(item);
+            }
+
+            return linkedList;
+        }
+
+        private int FindRating(bool isOxygen)
+        {
+            var linkedList = ConvertToLinkedList(_input);
+            var index = 0;
+            while (linkedList.Count > 1)
+            {
+                count_ones_and_zeros(linkedList);
+
+                var mostCommon = _counts[index].OneCount < _counts[index].ZeroCount ? '1' : '0';
+                if (isOxygen)
                 {
-                    if (row[column] == '1')
+                    mostCommon = mostCommon == '0' ? '1' : '0';
+                }
+
+                var currentNode = linkedList.First;
+                var nextNode = currentNode.Next;
+
+                while (currentNode != null)
+                {
+                    if (currentNode.Value[index] != mostCommon)
                     {
-                        oneCount++;
+                        linkedList.Remove(currentNode);
                     }
-                    else
-                    {
-                        zeroCount++;
-                    }
+
+                    currentNode = nextNode;
+                    nextNode = currentNode?.Next;
                 }
+
+                index++;
             }
 
-            return (oneCount, zeroCount);
-        }
-
-        private void InvalidateRows(List<string> input, List<bool> validRows, int column, char toInvalidate)
-        {
-            foreach (var row in _input)
-            {
-                if (row[column] == toInvalidate)
-                {
-                    validRows[input.IndexOf(row)] = false;
-                }
-            }
-        }
-
-        private int CountValidRows(List<bool> validRows)
-        {
-            var count = 0;
-
-            foreach (var row in validRows)
-            {
-                if (row)
-                {
-                    count++;
-                }
-            }
-
-            return count;
-        }
-
-        private string GetValidRow(List<string> input, List<bool> validRows)
-        {
-            for (var i = 0; i < input.Count; i++)
-            {
-                if (validRows[i])
-                {
-                    return input[i];
-                }
-            }
-
-            return "";
+            return Convert.ToInt32(linkedList.First(), 2);
         }
 
         public override ValueTask<string> Solve_2()
         {
-            var validRows = new List<bool>(_input.Count);
+            var oxygenRating = FindRating(true);
+            var co2Rating = FindRating(false);
 
-            for (var i = 0; i < _input.Count; i++)
-            {
-                validRows.Add(true);
-            }
-
-            for (int i = 0; true; i++)
-            {
-                if (CountValidRows(validRows) == 1)
-                {
-                    break;
-                }
-
-                var (one_count, zero_count) = CountCommonBits(_input, validRows, i);
-
-                if (one_count >= zero_count)
-                {
-                    InvalidateRows(_input, validRows, i, '0');
-                }
-                else
-                {
-                    InvalidateRows(_input, validRows, i, '1');
-                }
-            }
-
-            var oxygen_rating = GetValidRow(_input, validRows);
-
-            validRows.Clear();
-
-            for (var i = 0; i < _input.Count; i++)
-            {
-                validRows.Add(true);
-            }
-
-            for (int i = 0; true; i++)
-            {
-                if (CountValidRows(validRows) == 1)
-                {
-                    break;
-                }
-
-                var (one_count, zero_count) = CountCommonBits(_input, validRows, i);
-
-                if (one_count >= zero_count)
-                {
-                    InvalidateRows(_input, validRows, i, '1');
-                }
-                else
-                {
-                    InvalidateRows(_input, validRows, i, '0');
-                }
-            }
-
-            var co2_rating = GetValidRow(_input, validRows);
-
-            var oxygen_rating_int = Convert.ToInt32(oxygen_rating, 2);
-            var co2_rating_int = Convert.ToInt32(co2_rating, 2);
-
-            var result = oxygen_rating_int * co2_rating_int;
-
-            return new ValueTask<string>(result.ToString());
+            return new ValueTask<string>((oxygenRating * co2Rating).ToString());
         }
     }
 }
