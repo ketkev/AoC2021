@@ -69,5 +69,10 @@ namespace AoC2021.utils
         {
             return HashCode.Combine(x, y);
         }
+
+        public override string ToString()
+        {
+            return $"({x}, {y})";
+        }
     }
 }
