@@ -3,6 +3,7 @@ using System.Linq;
 
 namespace AoC2021.utils
 {
+    // ~Stolen~ Adapted from https://stackoverflow.com/a/55794983
     public static class ListExtensions
     {
         public static void Deconstruct<T>(this IEnumerable<T> seq, out T first, out IEnumerable<T> rest)

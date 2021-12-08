@@ -28,6 +28,8 @@ namespace AoC2021.Days
 
         public Day04()
         {
+            // Input is modified so it doesn't contain double spaces.
+            // TODO: Fix input parsing
             _input = File.ReadAllLines(InputFilePath).ToList();
             ParseInput();
         }
