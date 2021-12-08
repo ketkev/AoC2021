@@ -34,10 +34,10 @@ namespace AoC2021.Days
 
             foreach (var s in _input)
             {
-                var (one, two, rest) = s.Split("->");
+                var (one, two, _) = s.Split("->");
 
-                var (x1, y1, rest2) = one.Split(",");
-                var (x2, y2, rest3) = two.Split(",");
+                var (x1, y1, _) = one.Split(",");
+                var (x2, y2, _) = two.Split(",");
 
                 var x1l = long.Parse(x1);
                 var y1l = long.Parse(y1);
@@ -222,7 +222,7 @@ namespace AoC2021.Days
             }
 
             var count = intersections.LongCount(keyValuePair => keyValuePair.Value > 1);
-            
+
             return new ValueTask<string>(count.ToString());
         }
     }
