@@ -10,10 +10,10 @@ namespace AoC2021.Days
 {
     public class Line
     {
-        public Vector2Long From;
-        public Vector2Long To;
+        public Vector2Int From;
+        public Vector2Int To;
 
-        public Line(Vector2Long from, Vector2Long to)
+        public Line(Vector2Int from, Vector2Int to)
         {
             From = from;
             To = to;
@@ -39,29 +39,29 @@ namespace AoC2021.Days
                 var (x1, y1, _) = one.Split(",");
                 var (x2, y2, _) = two.Split(",");
 
-                var x1l = long.Parse(x1);
-                var y1l = long.Parse(y1);
-                var x2l = long.Parse(x2);
-                var y2l = long.Parse(y2);
+                var x1l = int.Parse(x1);
+                var y1l = int.Parse(y1);
+                var x2l = int.Parse(x2);
+                var y2l = int.Parse(y2);
 
                 if (x1l == x2l || y1l == y2l)
                 {
-                    _linesPart1.Add(new Line(new Vector2Long(x1l, y1l),
-                        new Vector2Long(x2l, y2l)));
-                    _linesPart2.Add(new Line(new Vector2Long(x1l, y1l),
-                        new Vector2Long(x2l, y2l)));
+                    _linesPart1.Add(new Line(new Vector2Int(x1l, y1l),
+                        new Vector2Int(x2l, y2l)));
+                    _linesPart2.Add(new Line(new Vector2Int(x1l, y1l),
+                        new Vector2Int(x2l, y2l)));
                 }
                 else
                 {
-                    _linesPart2.Add(new Line(new Vector2Long(x1l, y1l),
-                        new Vector2Long(x2l, y2l)));
+                    _linesPart2.Add(new Line(new Vector2Int(x1l, y1l),
+                        new Vector2Int(x2l, y2l)));
                 }
             }
         }
 
         public override ValueTask<string> Solve_1()
         {
-            var intersections = new Dictionary<Vector2Long, int>();
+            var intersections = new Dictionary<Vector2Int, int>();
 
             foreach (var line in _linesPart1)
             {
@@ -72,7 +72,7 @@ namespace AoC2021.Days
 
                     for (var i = min; i <= max; i++)
                     {
-                        var point = new Vector2Long(line.From.x, i);
+                        var point = new Vector2Int(line.From.x, i);
                         if (intersections.ContainsKey(point))
                         {
                             intersections[point]++;
@@ -90,7 +90,7 @@ namespace AoC2021.Days
 
                     for (var i = min; i <= max; i++)
                     {
-                        var point = new Vector2Long(i, line.From.y);
+                        var point = new Vector2Int(i, line.From.y);
                         if (intersections.ContainsKey(point))
                         {
                             intersections[point]++;
@@ -109,7 +109,7 @@ namespace AoC2021.Days
             return new ValueTask<string>(count.ToString());
         }
 
-        public static IEnumerable<Vector2Long> GetPointsOnLine(Vector2Long from, Vector2Long to)
+        public static IEnumerable<Vector2Int> GetPointsOnLine(Vector2Int from, Vector2Int to)
         {
             int x0 = (int)from.x;
             int y0 = (int)from.y;
@@ -146,7 +146,7 @@ namespace AoC2021.Days
             int y = y0;
             for (int x = x0; x <= x1; x++)
             {
-                yield return new Vector2Long((steep ? y : x), (steep ? x : y));
+                yield return new Vector2Int((steep ? y : x), (steep ? x : y));
                 error = error - dy;
                 if (error < 0)
                 {
@@ -161,7 +161,7 @@ namespace AoC2021.Days
 
         public override ValueTask<string> Solve_2()
         {
-            var intersections = new Dictionary<Vector2Long, int>();
+            var intersections = new Dictionary<Vector2Int, int>();
 
             foreach (var line in _linesPart2)
             {
@@ -172,7 +172,7 @@ namespace AoC2021.Days
 
                     for (var i = min; i <= max; i++)
                     {
-                        var point = new Vector2Long(line.From.x, i);
+                        var point = new Vector2Int(line.From.x, i);
 
                         if (intersections.ContainsKey(point))
                         {
@@ -191,7 +191,7 @@ namespace AoC2021.Days
 
                     for (var i = min; i <= max; i++)
                     {
-                        var point = new Vector2Long(i, line.From.y);
+                        var point = new Vector2Int(i, line.From.y);
 
                         if (intersections.ContainsKey(point))
                         {
