@@ -2,7 +2,7 @@
 
 namespace AoC2021.utils
 {
-    public struct Vector2Int
+    public class Vector2Int
     {
         public int x;
         public int y;
