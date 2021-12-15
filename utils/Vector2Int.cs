@@ -64,6 +64,11 @@ namespace AoC2021.utils
         {
             return x == other.x && y == other.y;
         }
+        
+        public float Length()
+        {
+            return (float)Math.Sqrt(x * x + y * y);
+        }
 
         public override int GetHashCode()
         {
