@@ -26,32 +26,28 @@ namespace AoC2021.Days
     class Packet
     {
         public int Version;
-        public int Id;
-
-        public bool HasValue;
+        public Operation Id;
 
         public long Value;
         public List<Packet> SubPackets;
 
-        public Packet(int version, int id, long value)
+        public Packet(int version, Operation id, long value)
         {
             Version = version;
             Id = id;
             Value = value;
-            HasValue = true;
         }
 
-        public Packet(int version, int id, List<Packet> subPackets)
+        public Packet(int version, Operation id, List<Packet> subPackets)
         {
             Version = version;
             Id = id;
             SubPackets = subPackets;
-            HasValue = false;
         }
 
         public override string ToString()
         {
-            if (HasValue)
+            if (Id == Operation.Value)
             {
                 return $"{Version} {Id}: {Value}";
             }
@@ -61,7 +57,7 @@ namespace AoC2021.Days
 
                 foreach (var subPacket in SubPackets)
                 {
-                    str += $" {subPacket} ";
+                    str += $" {{{subPacket}}} ";
                 }
 
                 str += "] )";
@@ -92,11 +88,11 @@ namespace AoC2021.Days
             Packet parsedPacket;
 
             int version = GetPacketVersion(packet);
-            int id = GetPacketId(packet);
+            Operation id = GetPacketId(packet);
 
             int remainingBits = 0;
 
-            if (id == 4)
+            if (id == Operation.Value)
             {
                 long value = 0;
                 (value, remainingBits) = ParseLiteralValue(packet);
@@ -118,10 +114,10 @@ namespace AoC2021.Days
             return Convert.ToInt32(versionBits, 2);
         }
 
-        private int GetPacketId(string packet)
+        private Operation GetPacketId(string packet)
         {
             var versionBits = packet.Substring(3, 3);
-            return Convert.ToInt32(versionBits, 2);
+            return (Operation)Convert.ToInt32(versionBits, 2);
         }
 
         private (long, int) ParseLiteralValue(string packet)
@@ -198,7 +194,7 @@ namespace AoC2021.Days
         {
             var versionSum = packet.Version;
 
-            if (!packet.HasValue)
+            if (packet.Id != Operation.Value)
             {
                 foreach (var subPacket in packet.SubPackets)
                 {
@@ -209,19 +205,59 @@ namespace AoC2021.Days
             return versionSum;
         }
 
+        private long Execute(Packet packet)
+        {
+            var result = 0L;
+
+            if (packet.Id == Operation.Value)
+            {
+                result = packet.Value;
+            }
+            else
+            {
+                var results = packet.SubPackets.Select(Execute).ToList();
+
+                switch (packet.Id)
+                {
+                    case Operation.Sum:
+                        result = results.Sum();
+                        break;
+                    case Operation.Product:
+                        result = results.Aggregate(1L, (current, value) => current * value);
+                        break;
+                    case Operation.Minimum:
+                        result = results.Min();
+                        break;
+                    case Operation.Maximum:
+                        result = results.Max();
+                        break;
+                    case Operation.Gt:
+                        result = results[0] > results[1] ? 1 : 0;
+                        break;
+                    case Operation.Lt:
+                        result = results[0] < results[1] ? 1 : 0;
+                        break;
+                    case Operation.Eq:
+                        result = results[0] == results[1] ? 1 : 0;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            return result;
+        }
+
         public override ValueTask<string> Solve_1()
         {
-            var packet = ParsePacket(ConvertToBits("A0016C880162017C3686B18A3D4780")).Item1;
-            Console.WriteLine(packet);
-            Console.WriteLine(CalculateVersionSum(packet));
-
             return new ValueTask<string>(CalculateVersionSum(ParsePacket(ConvertToBits(_stringInput)).Item1)
                 .ToString());
         }
 
         public override ValueTask<string> Solve_2()
         {
-            return new ValueTask<string>("TODO");
+            return new ValueTask<string>(Execute(ParsePacket(ConvertToBits(_stringInput)).Item1)
+                .ToString());
         }
     }
 }
