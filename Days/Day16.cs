@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using AoC2021.utils;
 using AoC2021.utils.graph;
@@ -10,6 +11,18 @@ using AoCHelper;
 
 namespace AoC2021.Days
 {
+    enum Operation
+    {
+        Sum = 0,
+        Product = 1,
+        Minimum = 2,
+        Maximum = 3,
+        Value = 4,
+        Gt = 5,
+        Lt = 6,
+        Eq = 7
+    }
+
     class Packet
     {
         public int Version;
@@ -17,10 +30,10 @@ namespace AoC2021.Days
 
         public bool HasValue;
 
-        public int Value;
+        public long Value;
         public List<Packet> SubPackets;
 
-        public Packet(int version, int id, int value)
+        public Packet(int version, int id, long value)
         {
             Version = version;
             Id = id;
@@ -34,6 +47,27 @@ namespace AoC2021.Days
             Id = id;
             SubPackets = subPackets;
             HasValue = false;
+        }
+
+        public override string ToString()
+        {
+            if (HasValue)
+            {
+                return $"{Version} {Id}: {Value}";
+            }
+            else
+            {
+                var str = $"({Version} {Id}: [";
+
+                foreach (var subPacket in SubPackets)
+                {
+                    str += $" {subPacket} ";
+                }
+
+                str += "] )";
+
+                return str;
+            }
         }
     }
 
@@ -64,13 +98,14 @@ namespace AoC2021.Days
 
             if (id == 4)
             {
-                int value = 0;
+                long value = 0;
                 (value, remainingBits) = ParseLiteralValue(packet);
                 parsedPacket = new Packet(version, id, value);
             }
             else
             {
-                var subPackets = ParseSubPackets(packet);
+                List<Packet> subPackets;
+                (subPackets, remainingBits) = ParseSubPackets(packet);
                 parsedPacket = new Packet(version, id, subPackets);
             }
 
@@ -89,7 +124,7 @@ namespace AoC2021.Days
             return Convert.ToInt32(versionBits, 2);
         }
 
-        private (int, int) ParseLiteralValue(string packet)
+        private (long, int) ParseLiteralValue(string packet)
         {
             var valueBits = packet.Substring(6);
 
@@ -106,20 +141,37 @@ namespace AoC2021.Days
                 newGroupComing = group[0] == '1';
                 index += 5;
             }
-            
-            // TODO: Fix remaining bits
-            return (Convert.ToInt32(value, 2), packet.Length - index);
+
+            return (Convert.ToInt64(value, 2), packet.Length - index - 5);
         }
 
-        private List<Packet> ParseSubPackets(string packet)
+        private (List<Packet>, int) ParseSubPackets(string packet)
         {
             var result = new List<Packet>();
+
+            var remainingBitsAfterSubPacketParsing = 0;
 
             if (packet[6] == '0')
             {
                 // 15-bit number for number of bits in the subpackets
                 var subPacketCountBits = packet.Substring(7, 15);
                 var subPacketBitCount = Convert.ToInt32(subPacketCountBits, 2);
+
+                var index = 22;
+
+                var previousRemainingBits = packet.Length - index;
+
+                while (subPacketBitCount > 0)
+                {
+                    var (parsedPacket, remainingBits) = ParsePacket(packet.Substring(index));
+
+                    subPacketBitCount -= previousRemainingBits - remainingBits + 1;
+                    previousRemainingBits = remainingBits;
+                    index = packet.Length - remainingBits + 1;
+                    result.Add(parsedPacket);
+
+                    remainingBitsAfterSubPacketParsing = packet.Length - index + 1;
+                }
             }
             else
             {
@@ -128,24 +180,43 @@ namespace AoC2021.Days
                 var subPacketCount = Convert.ToInt32(subPacketCountBits, 2);
 
                 var index = 18;
-                
+
                 for (int i = 0; i < subPacketCount; i++)
                 {
                     var (parsedPacket, remainingBits) = ParsePacket(packet.Substring(index));
-                    // TODO: Fix remaining bits
-                    index = packet.Length - remainingBits;
+                    index = packet.Length - remainingBits + 1;
                     result.Add(parsedPacket);
+                }
+
+                remainingBitsAfterSubPacketParsing = packet.Length - index + 1;
+            }
+
+            return (result, remainingBitsAfterSubPacketParsing);
+        }
+
+        private int CalculateVersionSum(Packet packet)
+        {
+            var versionSum = packet.Version;
+
+            if (!packet.HasValue)
+            {
+                foreach (var subPacket in packet.SubPackets)
+                {
+                    versionSum += CalculateVersionSum(subPacket);
                 }
             }
 
-            return result;
+            return versionSum;
         }
 
         public override ValueTask<string> Solve_1()
         {
-            ParsePacket(ConvertToBits("EE00D40C823060"));
+            var packet = ParsePacket(ConvertToBits("A0016C880162017C3686B18A3D4780")).Item1;
+            Console.WriteLine(packet);
+            Console.WriteLine(CalculateVersionSum(packet));
 
-            return new ValueTask<string>("TODO");
+            return new ValueTask<string>(CalculateVersionSum(ParsePacket(ConvertToBits(_stringInput)).Item1)
+                .ToString());
         }
 
         public override ValueTask<string> Solve_2()
