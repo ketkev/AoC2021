@@ -65,9 +65,9 @@ namespace AoC2021.utils
             return new Vector3Int(this.x + x, this.y + y, this.z + z);
         }
 
-        public static int ManhattanDistance(Vector3Int a, Vector3Int b)
+        public int ManhattanDistance(Vector3Int other)
         {
-            return Math.Abs(a.x - b.x) + Math.Abs(a.y - b.y) + Math.Abs(a.z - b.z);
+            return Math.Abs(x - other.x) + Math.Abs(y - other.y) + Math.Abs(z - other.z);
         }
 
         public override bool Equals(object obj)

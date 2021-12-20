@@ -255,7 +255,7 @@ namespace AoC2021.Days
             {
                 foreach (var scannerPositionB in _scannerPositions)
                 {
-                    var distance = Math.Abs(Vector3Int.ManhattanDistance(scannerPositionA, scannerPositionB));
+                    var distance = scannerPositionA.ManhattanDistance(scannerPositionB);
 
                     if (distance > largest)
                     {
